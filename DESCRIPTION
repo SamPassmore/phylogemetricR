@@ -1,11 +1,13 @@
 Package: phylogemetric
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Calculate Delta and Q-residual Scores
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Author: Sam Passmore
+Maintainer: Sam Passmore <passmore.sam@gmail.com>
+Description: A R library for calculating delta score (Holland et al. 2002) and Q-Residual (Gray et al. 2010) for phylogenetic data. Based on the python package phylogemetric (https://github.com/SimonGreenhill/phylogemetric)
+License: BSD 3-Clause "New" or "Revised" License
 Encoding: UTF-8
 LazyData: true
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3

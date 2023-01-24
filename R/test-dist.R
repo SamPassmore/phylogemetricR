@@ -1,0 +1,10 @@
+test_that("hamming distance works",{
+  expect_equal(hammingdist("10", "10"), 0.0)
+  expect_equal(hammingdist("00", "11"), 1.0)
+  expect_equal(hammingdist("11", "01"), 0.5)
+  expect_equal(hammingdist("11", "10"), 0.5)
+  expect_equal(hammingdist("1?", "01"), 1.0)
+  expect_equal(hammingdist("11", "1?"), 0.0)
+  expect_equal(hammingdist("1-", "01"), 1.0)
+  expect_equal(hammingdist("11", "1-"), 0.0)
+})
