@@ -1,3 +1,5 @@
+#### Binary Tests ####
+
 MATRIX = data.frame(
   A = c('1', '1', '1', '1', '0', '0', '1', '1', '1', '0', '1', '1',
         '1', '1', '0', '0', '1', '1', '1', '0'),
@@ -19,3 +21,11 @@ test_that("delta scores are calcuated correctly", {
   expect_equal(delta_score(MATRIX, colnames(MATRIX)),
                simple_expected)
 })
+
+#### Continuous Tests ####
+contdata = read.table('inst/extdata/DarwinsFinchesTraits.txt', sep = "\t",
+                      header = 1)
+
+contdata_t = t(contdata[,2:6])
+colnames(contdata_t) = contdata[,1]
+delta_score(data = contdata_t, taxa = contdata[,1], method = "euclidean")

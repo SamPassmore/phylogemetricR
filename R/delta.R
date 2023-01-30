@@ -9,7 +9,7 @@
 #'
 #' @examples
 quartet_sets = function(taxa, k = 4){
-  combn(taxa, k)
+  combinat::combn(taxa, k)
 }
 
 #' Title
@@ -35,8 +35,15 @@ quartet_score = function(data, quartet, method = "hamming"){
   m2 = values[2]
   m3 = values[3]
 
+  # Delta score
+  if((m1 - m3) == 0){
+    delta = 0
+  } else {
+    delta = (m1 - m2)/(m1 - m3)
+  }
+
   return(list(quartet = quartet,
-              delta = (m1 - m2)/(m1 - m3),
+              delta = delta,
               qresidual = (m1 - m2)^2)
          )
 }
@@ -64,7 +71,7 @@ summarise_taxon_scores = function(sets, quartet_distances){
   taxa_sums / choose(n_taxa - 1, 3)
 }
 
-#' Title
+#' Delta Scores
 #'
 #' @param data The data matrix used to calculate distance between taxa. Each taxa should be a column in the data.
 #' @param taxa A vector of the taxa analysed. Should relate to the columns in data
@@ -73,12 +80,24 @@ summarise_taxon_scores = function(sets, quartet_distances){
 #' @export
 #'
 #' @examples
-delta_score = function(data, taxa){
+delta_score = function(data, taxa, method = "hamming"){
   sets = quartet_sets(taxa)
 
   quartet_distances = apply(sets, 2, function(s){
-    quartet_score(data, s)
+    quartet_score(data, s, method = method)
   })
+
+  ### Calculate quartet distances
+  ## If pbapply is available, use to print a progress bar
+  quartet_distances = if (requireNamespace("pbapply", quietly = TRUE)) {
+    pbapply::pbapply(sets, 2, function(s){
+      quartet_score(data, s, method = method)
+    })
+  } else {
+    apply(sets, 2, function(s){
+      quartet_score(data, s, method = method)
+    })
+  }
 
   delta = sum(unlist(lapply(quartet_distances, "[[", "delta"))) / ncol(sets)
   delta_taxon = summarise_taxon_scores(sets, quartet_distances)
