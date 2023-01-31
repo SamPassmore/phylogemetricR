@@ -89,14 +89,18 @@ delta_score = function(data, taxa, method = "hamming"){
 
   ### Calculate quartet distances
   ## If pbapply is available, use to print a progress bar
-  quartet_distances = if (requireNamespace("pbapply", quietly = TRUE)) {
-    pbapply::pbapply(sets, 2, function(s){
-      quartet_score(data, s, method = method)
-    })
+  if(requireNamespace("pbapply", quietly = TRUE)) {
+      cl <- makeCluster(2)
+      pboptions(type = "txt")
+      quartet_distances = pbapply::pbapply(sets, 2, function(s) {
+        quartet_score(data, s, method = method)
+      }, cl = cl)
+      stopCluster(cl)
   } else {
-    apply(sets, 2, function(s){
-      quartet_score(data, s, method = method)
-    })
+    stop("Not using pbapply")
+    # apply(sets, 2, function(s){
+    #   quartet_distances = quartet_score(data, s, method = method)
+    # })
   }
 
   delta = sum(unlist(lapply(quartet_distances, "[[", "delta"))) / ncol(sets)
