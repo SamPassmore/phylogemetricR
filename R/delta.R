@@ -23,12 +23,12 @@ quartet_sets = function(taxa, k = 4){
 #'
 #' @examples
 quartet_score = function(data, quartet, method = "hamming"){
-  dij = dist.phylogemetric(data[,quartet[1]], data[,quartet[2]])
-  dkl = dist.phylogemetric(data[,quartet[3]], data[,quartet[4]])
-  dik = dist.phylogemetric(data[,quartet[1]], data[,quartet[3]])
-  djl = dist.phylogemetric(data[,quartet[2]], data[,quartet[4]])
-  dil = dist.phylogemetric(data[,quartet[1]], data[,quartet[4]])
-  djk = dist.phylogemetric(data[,quartet[2]], data[,quartet[3]])
+  dij = dist.phylogemetric(data[quartet[1],], data[quartet[2],], method = method)
+  dkl = dist.phylogemetric(data[quartet[3],], data[quartet[4],], method = method)
+  dik = dist.phylogemetric(data[quartet[1],], data[quartet[3],], method = method)
+  djl = dist.phylogemetric(data[quartet[2],], data[quartet[4],], method = method)
+  dil = dist.phylogemetric(data[quartet[1],], data[quartet[4],], method = method)
+  djk = dist.phylogemetric(data[quartet[2],], data[quartet[3],], method = method)
 
   values = sort(c(dij + dkl, dik + djl, dil + djk), decreasing = TRUE)
   m1 = values[1]
@@ -43,12 +43,24 @@ quartet_score = function(data, quartet, method = "hamming"){
   }
 
   return(list(quartet = quartet,
-              delta = delta,
-              qresidual = (m1 - m2)^2)
-         )
+              delta = delta
+         ))
 }
 
-#' Title
+
+#' Wrapper function for quartet score
+#'
+#' @param q
+#'
+#' @return
+#' @export
+#'
+#' @examples
+q_score_p = function(q){
+  quartet_score(data = q[[1]], quartet = q[[2]], method = q[[3]])
+}
+
+#' Summarise taxon scores
 #'
 #' @param sets The quartet sets that will be analysed
 #' @param quartet_distances The quartet delta scores that were output from `quartet_score`
@@ -80,34 +92,31 @@ summarise_taxon_scores = function(sets, quartet_distances){
 #' @export
 #'
 #' @examples
-delta_score = function(data, taxa, method = "hamming"){
+delta_score = function(data, taxa, method = "hamming", parallel = TRUE, n_cores = detectCores() / 2){
+  require(parallel)
   sets = quartet_sets(taxa)
-
-  quartet_distances = apply(sets, 2, function(s){
-    quartet_score(data, s, method = method)
-  })
-
   ### Calculate quartet distances
   ## If pbapply is available, use to print a progress bar
-  if(requireNamespace("pbapply", quietly = TRUE)) {
-      cl <- makeCluster(2)
-      pboptions(type = "txt")
-      quartet_distances = pbapply::pbapply(sets, 2, function(s) {
-        quartet_score(data, s, method = method)
-      }, cl = cl)
+  if(requireNamespace("parallel", quietly = TRUE) & parallel == TRUE) {
+      cl <- makeCluster(n_cores)
+      clusterExport(cl, "quartet_score")
+      clusterExport(cl, "dist.phylogemetric")
+      clusterExport(cl, "euclideandist")
+      clusterExport(cl, "hammingdist")
+      qlist = apply(sets, 2, function(s) list(data, s, method))
+      quartet_distances = parLapply(cl = cl, X = qlist, fun = q_score_p)
       stopCluster(cl)
   } else {
-    stop("Not using pbapply")
-    # apply(sets, 2, function(s){
-    #   quartet_distances = quartet_score(data, s, method = method)
-    # })
+  quartet_distances = apply(sets, 2, function(s){
+      quartet_score(data, s, method = method)
+    })
   }
 
   delta = sum(unlist(lapply(quartet_distances, "[[", "delta"))) / ncol(sets)
   delta_taxon = summarise_taxon_scores(sets, quartet_distances)
 
+  ## qresidual
+  # qresidual = sum(unlist(lapply(quartet_distances, "[[", "qresidual"))) / ncol(sets)
+
   return(list(delta_score = delta, delta_taxon_scores = round(delta_taxon, 5)))
 }
-
-
-

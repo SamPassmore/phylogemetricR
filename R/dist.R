@@ -9,7 +9,7 @@ hammingdist <- function(a, b){
     }
     compared <- compared + 1.0
   }
-  return (1.0 - (same / compared))
+  return(1.0 - (same / compared))
 }
 
 euclideandist <- function(a, b) sqrt(sum((a - b)^2))
