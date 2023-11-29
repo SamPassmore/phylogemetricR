@@ -23,7 +23,7 @@ test_that("delta scores are calcuated correctly", {
 })
 
 #### Continuous Tests ####
-contdata = read.table('inst/extdata/DarwinsFinchesTraits.txt', sep = "\t",
+contdata = read.table('extdata/DarwinsFinchesTraits.txt', sep = "\t",
                       header = 1)
 
 contdata_t = t(contdata[,2:6])
